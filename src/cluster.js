@@ -7,6 +7,13 @@ const numCPUs = require("os").cpus().length;
 const { setupMaster, setupWorker } = require("@socket.io/sticky");
 const { createAdapter, setupPrimary } = require("@socket.io/cluster-adapter");
 
+if (process.env["PWD"] !== process.env.npm_config_local_prefix) {
+    console.error("[Error] Invalid Start Command");
+    console.error("    >>> $ npm run start");
+
+    process.exit(-1);
+}
+
 const app = express();
 
 app.get("/login", async (req, res) => {
@@ -35,23 +42,6 @@ const maxWrongAttemptsByIPperDay = 100;
 const maxConsecutiveFailsByUsernameAndIP = 10;
 
 const { RateLimiterMemory } = require('rate-limiter-flexible');
-const { RateLimiterRedis } = require('rate-limiter-flexible');
-
-const limiterSlowBruteByIP = new RateLimiterRedis({
-  storeClient: redisClient,
-  keyPrefix: 'login_fail_ip_per_day',
-  points: maxWrongAttemptsByIPperDay,
-  duration: 60 * 60 * 24,
-  blockDuration: 60 * 60 * 24, // Block for 1 day, if 100 wrong attempts per day
-});
-
-const limiterConsecutiveFailsByUsernameAndIP = new RateLimiterRedis({
-  storeClient: redisClient,
-  keyPrefix: 'login_fail_consecutive_username_and_ip',
-  points: maxConsecutiveFailsByUsernameAndIP,
-  duration: 60 * 60 * 24 * 90, // Store number for 90 days since first fail
-  blockDuration: 60 * 60, // Block for 1 hour
-});
 
 const rateLimiter = new RateLimiterMemory(
   {  // 60 Points / Minute
@@ -59,68 +49,8 @@ const rateLimiter = new RateLimiterMemory(
     duration: 1,
   });
 
-
-const getUsernameIPkey = (username, ip) => `${username}_${ip}`;
-
-async function loginRoute(req, res) {
-  const ipAddr = req.ip;
-  const usernameIPkey = getUsernameIPkey(req.body.email, ipAddr);
-
-  const [resUsernameAndIP, resSlowByIP] = await Promise.all([
-    limiterConsecutiveFailsByUsernameAndIP.get(usernameIPkey),
-    limiterSlowBruteByIP.get(ipAddr),
-  ]);
-
-  let retrySecs = 0;
-
-  // Check if IP or Username + IP is already blocked
-  if (resSlowByIP !== null && resSlowByIP.consumedPoints > maxWrongAttemptsByIPperDay) {
-    retrySecs = Math.round(resSlowByIP.msBeforeNext / 1000) || 1;
-  } else if (resUsernameAndIP !== null && resUsernameAndIP.consumedPoints > maxConsecutiveFailsByUsernameAndIP) {
-    retrySecs = Math.round(resUsernameAndIP.msBeforeNext / 1000) || 1;
-  }
-
-  if (retrySecs > 0) {
-    res.set('Retry-After', String(retrySecs));
-    res.status(429).send('Too Many Requests');
-  } else {
-    const user = authorise(req.body.email, req.body.password); // should be implemented in your project
-    if (!user.isLoggedIn) {
-      // Consume 1 point from limiters on wrong attempt and block if limits reached
-      try {
-        const promises = [limiterSlowBruteByIP.consume(ipAddr)];
-        if (user.exists) {
-          // Count failed attempts by Username + IP only for registered users
-          promises.push(limiterConsecutiveFailsByUsernameAndIP.consume(usernameIPkey));
-        }
-
-        await Promise.all(promises);
-
-        res.status(400).end('email or password is wrong');
-      } catch (rlRejected) {
-        if (rlRejected instanceof Error) {
-          throw rlRejected;
-        } else {
-          res.set('Retry-After', String(Math.round(rlRejected.msBeforeNext / 1000)) || 1);
-          res.status(429).send('Too Many Requests');
-        }
-      }
-    }
-
-    if (user.isLoggedIn) {
-      if (resUsernameAndIP !== null && resUsernameAndIP.consumedPoints > 0) {
-        // Reset on successful authorisation
-        await limiterConsecutiveFailsByUsernameAndIP.delete(usernameIPkey);
-      }
-
-      res.end('authorized');
-    }
-  }
-}
-
-
 if (cluster.isMaster) {
-  console.log(`Master ${process.pid} is running`);
+  console.debug("[Debug] Primary Node PID" + ":", "\t" + process.pid, "\n");
 
   const httpServer = http.createServer();
 
@@ -134,44 +64,25 @@ if (cluster.isMaster) {
 
   // Node.js > 16.0.0
   cluster.setupPrimary({
+    origin: "localhost",
     serialization: "advanced",
   });
 
   httpServer.listen(3000);
 
-  for (let i = 0; i < numCPUs; i++) {
-    cluster.fork();
-  }
+  for (let i = 0; i < numCPUs; i++) cluster.fork();
 
-  cluster.on("start", (event) => {
-    console.log(event);
-  });
+  cluster.on("start", (event) => console.log(JSON.stringify(event, null, 4) + "\n"));
 
   cluster.on("exit", (worker) => {
-    console.log(`Worker ${worker.process.pid} died`);
+    console.warn("[Warning] Worker Node Failure", JSON.stringify(worker, null, 4));
+    console.debug("[Debug] Forking Additional Node ...");
+
     cluster.fork();
   });
 } else {
-  console.log(`Worker ${process.pid} started`);
+  console.debug("[Debug] Auxiliary Node PID" + ":", "\t" + process.pid, "\n");
 
-//  const httpServer = http.createServer({}, (request, response) => {
-//       console.debug("[Debug] Request Header(s)", JSON.stringify(request.headers, null, 4), "\n");
-//       console.debug("[Debug] Request Cookie", request.headers?.cookie, "\n");
-//       console.debug("[Debug] Request Path", request?.url, "\n");
-//       console.debug("[Debug] Request Method", request?.method, "\n");
-//       response.statusMessage = "Successful";
-//        response.setHeader("Server", "@Nexus");
-//        response.setHeader("Content-Type", "Application/JSON");
-//        response.writeHead(200);
-//        response.end(JSON.stringify({
-//            Status: 200,
-//            Message: "Successful",
-//            Uptime: process.uptime(),
-//            Method: request.method,
-//            Server: response.socket.address(),
-//            Endpoint: request.url
-//        }, null, 4));
-//  });
   const httpServer = http.createServer(app);
 
   const io = new Server(httpServer);

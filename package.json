@@ -2,11 +2,15 @@
   "name": "@cloud-technology/conceptual-sockets-cluster",
   "version": "0.0.1",
   "description": "Socket-Server + Proof-of-Concept Client Application",
-  "main": "cluster.js",
+  "main": "src/cluster.js",
   "scripts": {
-    "redis": "docker-compose up",
-    "redis-detach": "docker-compose up --detach",
-    "administration": "serve --single ./administration/ui/dist"
+    "redis": "docker-compose --file system/redis.yaml up",
+    "redis-stop": "docker-compose --file system/redis.yaml down",
+    "redis-detach": "docker-compose --file system/redis.yaml --detach up",
+    "administration": "[[ -d ./administration ]] && serve --single ./administration/ui/dist",
+    "environment": "node .ci/environment.js",
+    "setup": "npm install .",
+    "start": "node src/cluster.js"
   },
   "repository": "git+https://github.com/cloud-hybrid/conceptual-sockets-cluster.git",
   "author": "Jacob B. Sanders",
