@@ -12,7 +12,7 @@
         "administration": "[[ -d ./administration ]] && serve --single ./administration/ui/dist",
         "administration-scan": "lsof -nP -iTCP -sTCP:LISTEN | grep 8080 | awk '{ print $2 }' | head -1",
         "environment": "node .ci/environment.js",
-        "unit-tests": "cd .ci/archive && git pull --force && npm install . && npm run test",
+        "unit-tests": "git submodule init && git submodule foreach git pull && cd .ci/archive && git pull --force && npm install . && npm run test",
         "docker-compose": "node .ci/docker-compose.js",
         "scan": "lsof -nP -iTCP -sTCP:LISTEN | grep 3000 | awk '{ print $2 }' | head -1",
         "setup": "npm install .",

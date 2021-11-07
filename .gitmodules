@@ -1,3 +1,6 @@
 [submodule "administration"]
 	path = administration
 	url = https://github.com/socketio/socket.io-admin-ui.git
+[submodule ".ci/cluster-adapter"]
+	path = .ci/cluster-adapter
+	url = https://github.com/socketio/socket.io-cluster-adapter.git
