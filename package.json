@@ -1,0 +1,32 @@
+{
+  "name": "@cloud-technology/conceptual-sockets-cluster",
+  "version": "0.0.1",
+  "description": "Socket-Server + Proof-of-Concept Client Application",
+  "main": "cluster.js",
+  "scripts": {
+    "redis": "docker-compose up",
+    "redis-detach": "docker-compose up --detach",
+    "administration": "serve --single ./administration/ui/dist"
+  },
+  "repository": "git+https://github.com/cloud-hybrid/conceptual-sockets-cluster.git",
+  "author": "Jacob B. Sanders",
+  "license": "BSD-3-Clause",
+  "peerDependencies": {
+    "serve": "*"
+  },
+  "dependencies": {
+    "@socket.io/cluster-adapter": "^0.1.0",
+    "@socket.io/sticky": "^1.0.1",
+    "express": "^4.17.1",
+    "rate-limiter-flexible": "^2.3.3",
+    "redis": "^3.1.2",
+    "socket.io": "^4.3.1"
+  },
+  "devDependencies": {
+    "@socket.io/admin-ui": "^0.2.0",
+    "install": "^0.13.0",
+    "npm": "^8.1.3",
+    "socket.io-client": "^4.3.2"
+  }
+
+}

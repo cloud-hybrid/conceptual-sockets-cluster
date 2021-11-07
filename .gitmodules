@@ -1,0 +1,3 @@
+[submodule "administration"]
+	path = administration
+	url = https://github.com/socketio/socket.io-admin-ui.git
