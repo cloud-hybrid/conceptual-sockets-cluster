@@ -7,7 +7,7 @@ const Inputs = [
     "git submodule init",
     "git config --file \".gitconfig\" pull.rebase false",
     "git submodule update --recursive",
-    "git submodule foreach git checkout --force",
+    "git submodule foreach git checkout",
     "git submodule foreach git pull origin",
     "git checkout --force",
     "cd \"$(git rev-parse --show-toplevel)\"/.ci/archive",
