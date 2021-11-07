@@ -1,40 +1,39 @@
 {
-  "name": "@cloud-technology/conceptual-sockets-cluster",
-  "version": "0.0.1",
-  "description": "Socket-Server + Proof-of-Concept Client Application",
-  "main": "src/cluster.js",
-  "scripts": {
-    "redis": "docker-compose --file system/redis.yaml up",
-    "redis-scan": "lsof -nP -iTCP -sTCP:LISTEN | grep 6379 | awk '{ print $2 }' | head -1",
-    "redis-stop": "docker-compose --file system/redis.yaml down",
-    "redis-detach": "docker-compose --file system/redis.yaml --detach up",
-    "administration": "[[ -d ./administration ]] && serve --single ./administration/ui/dist",
-    "administration-scan": "lsof -nP -iTCP -sTCP:LISTEN | grep 8080 | awk '{ print $2 }' | head -1",
-    "environment": "node .ci/environment.js",
-    "docker-compose": "node .ci/docker-compose.js",
-    "setup": "npm install .",
-    "start": "node src/cluster.js",
-    "scan": "lsof -nP -iTCP -sTCP:LISTEN | grep 3000 | awk '{ print $2 }' | head -1"
-  },
-  "repository": "git+https://github.com/cloud-hybrid/conceptual-sockets-cluster.git",
-  "author": "Jacob B. Sanders",
-  "license": "BSD-3-Clause",
-  "peerDependencies": {
-    "serve": "*"
-  },
-  "dependencies": {
-    "@socket.io/cluster-adapter": "^0.1.0",
-    "@socket.io/sticky": "^1.0.1",
-    "express": "^4.17.1",
-    "rate-limiter-flexible": "^2.3.3",
-    "redis": "^3.1.2",
-    "socket.io": "^4.3.1"
-  },
-  "devDependencies": {
-    "@socket.io/admin-ui": "^0.2.0",
-    "docker-compose": "^0.23.13",
-    "install": "^0.13.0",
-    "npm": "^8.1.3",
-    "socket.io-client": "^4.3.2"
-  }
+    "name": "@cloud-technology/conceptual-sockets-cluster",
+    "version": "0.0.1",
+    "description": "Socket-Server + Proof-of-Concept Client Application",
+    "main": "src/cluster.js",
+    "scripts": {
+        "test": "node .ci/unit-tests/index.js",
+        "redis": "docker-compose --file system/redis.yaml up",
+        "redis-scan": "lsof -nP -iTCP -sTCP:LISTEN | grep 6379 | awk '{ print $2 }' | head -1",
+        "redis-stop": "docker-compose --file system/redis.yaml down",
+        "redis-detach": "docker-compose --file system/redis.yaml --detach up",
+        "administration": "[[ -d ./administration ]] && serve --single ./administration/ui/dist",
+        "administration-scan": "lsof -nP -iTCP -sTCP:LISTEN | grep 8080 | awk '{ print $2 }' | head -1",
+        "environment": "node .ci/environment.js",
+        "unit-tests": "cd .ci/archive && git pull --force && npm install . && npm run test",
+        "docker-compose": "node .ci/docker-compose.js",
+        "scan": "lsof -nP -iTCP -sTCP:LISTEN | grep 3000 | awk '{ print $2 }' | head -1",
+        "setup": "npm install .",
+        "start": "node src/cluster.js"
+    },
+    "repository": "git+https://github.com/cloud-hybrid/conceptual-sockets-cluster.git",
+    "author": "Jacob B. Sanders",
+    "license": "BSD-3-Clause",
+    "peerDependencies": {
+        "serve": "*"
+    },
+    "dependencies": {
+        "@socket.io/cluster-adapter": "latest",
+        "socket.io": "latest",
+        "socket.io-client": "latest",
+        "@socket.io/sticky": "latest",
+        "express": "latest",
+        "rate-limiter-flexible": "latest",
+        "redis": "latest"
+    },
+    "devDependencies": {
+        "@socket.io/admin-ui": "latest"
+    }
 }
