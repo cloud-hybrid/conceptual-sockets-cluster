@@ -1,99 +1,141 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <title>Socket.IO chat</title>
     <style>
-      body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: rgba(23, 24, 26, 1); }
 
-      #form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
-      #input { border: none; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem; }
-      #input:focus { outline: none; }
-      #form > button { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; }
+        main { margin: auto; display: grid; }
 
-      #messages { list-style-type: none; margin: 0; padding: 0; }
-      #messages > li { padding: 0.5rem 1rem; }
-      #messages > li:nth-child(odd) { background: #efefef; }
+        #form { background: rgb(65, 65, 65); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
+
+        #input { border: none; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem; }
+
+        #input:focus { outline: none; }
+
+        #form > button { background: rgb(50, 50, 50); border: 2px solid transparent; padding: 0 1rem; margin: 0.25rem; outline: none; color: #FFFFFF; border-radius: 0.25rem; transition: all cubic-bezier(0.85, 0.85, 0.5, 0.5) 150ms }
+        #form > button:hover { background: rgb(35, 35, 35); border: 2px solid rgba(100, 100, 100, 0.85); outline: none; }
+        #form > button:active { background: rgb(15, 15, 15); border: 2px solid rgba(75, 75, 75, 0.85); outline: none; }
+
+        #messages { list-style-type: none; margin: auto; padding: 0; }
+
+        #messages > li { padding: 0.5rem 1rem; width: max-content; color: white; }
+
+        /* #messages > li:nth-child(odd) { background: rgba(152, 23, 23, 0.25); color: white; } */
+        /* #messages > li:nth-child(even) { background: rgba(10, 78, 227, 0.25); color: white; } */
     </style>
-  </head>
-  <body>
-    <ul id="messages"></ul>
-    <form id="form" action="">
-      <input id="input" autocomplete="off" /><button>Send</button>
-    </form>
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-      var socket = io();
 
-      socket.on("connect", () => {
+    <script src="/socket.io/socket.io.js" type="application/javascript"></script>
+</head>
+<body>
+    <main>
+        <ul id="messages"></ul>
+        <form id="form" action="">
+            <input id="input" autocomplete="off"/>
+            <button>Send</button>
+        </form>
+    </main>
+<script>
+    const socket = io();
+
+    let self = {};
+
+    socket.on("connect", () => {
+        self.id = String(socket?.id);
+
         const data = {
-          ID: {
-            Integer: socket?.ids,
-            Identifier: socket?.id
-          },
-          Session: {
-            Connection: socket?.connected,
-            Disconnection: socket?.diconnected,
-            Time: Date.now()
-          },
-          Flags: socket?.flags,
-          Options: engine,
-          Data: {
-            Emission: "Connection",
-            Type: "Broadcast",
-            Structured: JSON.stringify({Emission: "Connection"}, null, 0)
-          }
+            ID: {
+                Integer: socket?.ids,
+                Identifier: socket?.id
+            },
+            Session: {
+                Connection: socket?.connected,
+                Disconnection: socket?.diconnected,
+                Time: Date.now()
+            },
+            Flags: socket?.flags,
+            Options: engine,
+            Data: {
+                Emission: "Connection",
+                Type: "Broadcast",
+                Structured: JSON.stringify({ Emission: "Connection" }, null, 0)
+            }
         };
-    
+
         console.debug(data);
-     
+
         socket.emit(data.Data.Type, data);
-      });
+    });
 
-      socket.on("disconnect", () => {
+    socket.on("disconnect", () => {
         console.warn("Server (Socket) Disconnection Event");
-      });
+    });
 
-      var form = document.getElementById('form');
-      var input = document.getElementById('input');
+    const form = document.getElementById("form");
+    const input = document.getElementById("input");
 
-      const engine = socket?.io?.engine?.opts;
+    const engine = socket?.io?.engine?.opts;
 
-      form.addEventListener('submit', function(e) {
+    form.addEventListener("submit", function (e) {
         e.preventDefault();
+
         console.debug(socket);
+
         const data = {
-          ID: {
-            Integer: socket?.ids,
-            Identifier: socket?.id
-          },
-          Session: {
-            Connection: socket?.connected,
-            Disconnection: socket?.diconnected,
-            Time: Date.now()
-          },
-          Flags: socket?.flags,
-          Options: engine,
-          Data: {
-            Emission: input.value,
-            Type: "Message",
-            Structured: JSON.stringify({Emission: input?.value}, null, 0)
-          }
+            ID: {
+                Integer: socket?.ids,
+                Identifier: socket?.id
+            },
+            Session: {
+                Connection: socket?.connected,
+                Disconnection: socket?.diconnected,
+                Time: Date.now()
+            },
+            Flags: socket?.flags,
+            Options: engine,
+            Data: {
+                Emission: input.value,
+                Type: "Message",
+                Structured: JSON.stringify({ Emission: input?.value }, null, 0)
+            }
         };
 
         console.debug(data);
 
-        if (input.value) {
-          socket.emit(data.Data.Type, data);
-          input.value = '';
+        if ( input.value ) {
+            socket.emit(data.Data.Type, data);
+            input.value = "";
         }
-      }); 
-
-    socket.on("Broadcast", (message) => {
-      var item = document.createElement('li');
-      item.textContent = message;
-      messages.appendChild(item);
-      window.scrollTo(0, document.body.scrollHeight);
     });
-    </script>
-  </body>
+
+    socket.on("Broadcast", (_) => {
+        const $ = JSON.parse(_);
+
+        console.debug($);
+
+        const messages = document.getElementById("messages");
+        const item = document.createElement("li");
+        const user = document.createElement("span");
+        const format = document.createElement("pre");
+        const code = document.createElement("code");
+
+        code.innerHTML = " " + ">>>" + " " + $.Data["Emission"] + " ";
+        user.innerHTML = $.ID["Identifier"];
+
+        if (self?.id === $.ID["Identifier"]) {
+            format.style.background = "rgba(10, 78, 227, 0.25)";
+        } else {
+            format.style.background = "rgba(152, 23, 23, 0.25)";
+        }
+
+        format.appendChild(code);
+        format.style.width = "100%";
+        item.appendChild(user);
+        item.appendChild(format);
+        messages.appendChild(item);
+
+        window.scrollTo(0, document.body.scrollHeight);
+    });
+</script>
+</body>
 </html>
